@@ -1,22 +1,17 @@
 package dev.bsmp.emotetweaks.voicefx;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import de.maxhenkel.voicechat.Voicechat;
+import de.maxhenkel.voicechat.api.opus.OpusEncoder;
+import de.maxhenkel.voicechat.voice.client.ClientManager;
+import de.maxhenkel.voicechat.voice.common.LocationSoundPacket;
+import dev.bsmp.emotetweaks.emotetweaks.EmoteTweaks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
+
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
-
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
-import de.maxhenkel.voicechat.Voicechat;
-import de.maxhenkel.voicechat.api.opus.OpusEncoder;
-import de.maxhenkel.voicechat.plugins.PluginManager;
-import de.maxhenkel.voicechat.voice.client.ClientManager;
-import de.maxhenkel.voicechat.voice.client.ClientVoicechat;
-import de.maxhenkel.voicechat.voice.common.LocationSoundPacket;
 
 public class SFXThread extends Thread {
 
@@ -46,11 +41,7 @@ public class SFXThread extends Thread {
             }
 
             //Send Data Packet
-            FriendlyByteBuf buf = PacketByteBufs.create();
-            buf.writeUUID(uuid);
-            buf.writeByteArray(encoder.encode(frame));
-            buf.writeLong(framePosition);
-            ClientPlayNetworking.send(SFXPacket.PACKET_ID, buf);
+            EmoteTweaks.NETWORK.sendToServer(new SFXPacket(uuid, encoder.encode(frame), framePosition));
 
             short[] finalFrame = frame;
             Minecraft.getInstance().executeIfPossible(() -> ClientManager.getClient().processSoundPacket(new LocationSoundPacket(uuid, finalFrame, Minecraft.getInstance().player.position(), 15f, null)));
