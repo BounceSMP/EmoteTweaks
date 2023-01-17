@@ -6,8 +6,8 @@ import de.maxhenkel.voicechat.voice.client.ClientManager;
 import de.maxhenkel.voicechat.voice.common.LocationSoundPacket;
 import dev.bsmp.emotetweaks.emotetweaks.EmoteTweaks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.FriendlyByteBuf;
 
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,12 +18,12 @@ public class SFXThread extends Thread {
     private final OpusEncoder encoder;
     private final UUID uuid;
     private boolean started;
-    private short[] data;
+    private AudioInputStream stream;
 
-    private SFXThread(UUID uuid, OpusEncoder encoder, short[] data) {
+    private SFXThread(UUID uuid, OpusEncoder encoder, AudioInputStream stream) {
         this.uuid = uuid;
         this.encoder = encoder;
-        this.data = data;
+        this.stream = stream;
 
         this.setDaemon(true);
     }
@@ -33,40 +33,43 @@ public class SFXThread extends Thread {
         int framePosition = 0;
         long startTime = System.nanoTime();
 
-        short[] frame;
-        while ((frame = getFrameData(framePosition)) != null && !isInterrupted()) {
-            if (frame.length != 960) {
-                Voicechat.LOGGER.error("Got invalid audio frame size {}!={}", frame.length, 960);
-                break;
-            }
+        try {
+            byte[] bytes = new byte[1920];
+            short[] frame;
+            while ((stream.read(bytes) != -1) && !isInterrupted()) {
+//        while ((frame = getFrameData(framePosition)) != null && !isInterrupted()) {
+                frame = SoundPlugin.voicechatApi.getAudioConverter().bytesToShorts(bytes);
+                bytes = new byte[1920];
 
-            //Send Data Packet
-            EmoteTweaks.NETWORK.sendToServer(new SFXPacket(uuid, encoder.encode(frame), framePosition));
-
-            short[] finalFrame = frame;
-            Minecraft.getInstance().executeIfPossible(() -> ClientManager.getClient().processSoundPacket(new LocationSoundPacket(uuid, finalFrame, Minecraft.getInstance().player.position(), 15f, null)));
-
-            ++framePosition;
-            long waitTimestamp = startTime + (long) framePosition * 20000000L;
-            long waitNanos = waitTimestamp - System.nanoTime();
-
-            try {
-                if (waitNanos > 0L) {
-                    Thread.sleep(waitNanos / 1000000L, (int) (waitNanos % 1000000L));
+                if (frame.length != 960) {
+                    Voicechat.LOGGER.error("Got invalid audio frame size {}!={}", frame.length, 960);
+                    break;
                 }
-            } catch (InterruptedException var10) {
-                break;
+
+                //Send Data Packet
+                EmoteTweaks.NETWORK.sendToServer(new SFXPacket(uuid, encoder.encode(frame), framePosition));
+
+                short[] finalFrame = frame;
+                Minecraft.getInstance().execute(() -> ClientManager.getClient().processSoundPacket(new LocationSoundPacket(uuid, finalFrame, Minecraft.getInstance().player.position(), 15f, null)));
+
+                ++framePosition;
+                long waitTimestamp = startTime + (long) framePosition * 20000000L;
+                long waitNanos = waitTimestamp - System.nanoTime();
+
+                try {
+                    if (waitNanos > 0L) {
+                        Thread.sleep(waitNanos / 1000000L, (int) (waitNanos % 1000000L));
+                    }
+                } catch (InterruptedException var10) {
+                    break;
+                }
             }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         this.encoder.close();
-    }
-
-    private short[] getFrameData(int currentFrame) {
-        int startIndex = currentFrame * (960);
-        if(startIndex > data.length)
-            return null;
-        return Arrays.copyOfRange(this.data, startIndex, startIndex + 960);
     }
 
     public void startPlaying() {
@@ -76,8 +79,8 @@ public class SFXThread extends Thread {
         }
     }
 
-    public static SFXThread playSFX(short[] data) throws UnsupportedAudioFileException, IOException {
-        return new SFXThread(UUID.randomUUID(), SoundPlugin.voicechatApi.createEncoder(), data);
+    public static SFXThread playSFX(AudioInputStream stream) throws UnsupportedAudioFileException, IOException {
+        return new SFXThread(UUID.randomUUID(), SoundPlugin.voicechatApi.createEncoder(), stream);
     }
 
 }

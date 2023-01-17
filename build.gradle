@@ -3,7 +3,7 @@ plugins {
     id "maven-publish"
 }
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -54,10 +54,10 @@ dependencies {
     forge "net.minecraftforge:forge:${project.forge_version}"
 	
     modImplementation "io.github.kosmx.emotes:emotesMain:${project.emotecraft}"
-    modImplementation files("run/mods/emotecraft-for-MC1.18.2-2.2.5-forge.jar")
-    modImplementation "dev.kosmx.player-anim:player-animation-lib-forge:0.3.5"
+    modImplementation files("run/mods/emotecraft-for-MC1.16.5-2.2.5-forge.jar")
+    modImplementation "dev.kosmx.player-anim:player-animation-lib-forge:0.3.5+1.16.5"
     modImplementation "de.maxhenkel.voicechat:voicechat-api:2.3.3"
-    modImplementation "maven.modrinth:simple-voice-chat:forge-1.18.2-2.3.10"
+    modImplementation "maven.modrinth:simple-voice-chat:forge-1.16.5-2.3.10"
 }
 
 processResources {
@@ -69,7 +69,7 @@ processResources {
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
-    options.release = 17
+    options.release = 8
 }
 
 java {

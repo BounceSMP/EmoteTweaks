@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import de.maxhenkel.voicechat.api.ForgeVoicechatPlugin;
@@ -40,9 +41,9 @@ public class SoundPlugin implements VoicechatPlugin {
         voicechatServerApi = event.getVoicechat();
     }
 
-    public static void playSound(short[] data) {
+    public static void playSound(AudioInputStream stream) {
         try {
-            SFXThread thread = SFXThread.playSFX(data);
+            SFXThread thread = SFXThread.playSFX(stream);
             runningThreads.add(thread);
             thread.startPlaying();
         } catch (UnsupportedAudioFileException | IOException e) {
