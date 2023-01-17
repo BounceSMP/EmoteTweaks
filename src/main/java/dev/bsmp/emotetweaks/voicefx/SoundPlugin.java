@@ -6,12 +6,14 @@ import java.util.List;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import de.maxhenkel.voicechat.api.ForgeVoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatApi;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 
+@ForgeVoicechatPlugin
 public class SoundPlugin implements VoicechatPlugin {
 
     public static VoicechatApi voicechatApi;

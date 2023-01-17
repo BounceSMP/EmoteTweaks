@@ -1,7 +1,6 @@
 package dev.bsmp.emotetweaks.emotetweaks.mixin;
 
-import net.fabricmc.loader.api.FabricLoader;
-
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -13,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +44,7 @@ public class KeyframeAnimationPlayerMixin {
     @Inject(method = "<init>(Ldev/kosmx/playerAnim/core/data/KeyframeAnimation;I)V", at = @At("TAIL"))
     private void onConstruct(KeyframeAnimation emote, int t, CallbackInfo ci) {
         if(emote.extraData.containsKey("name")) {
-            Path autoFile = FabricLoader.getInstance().getGameDir().resolve("emotes" + FileSystems.getDefault().getSeparator() + ((String) emote.extraData.get("name")).replace("\"", "") + ".wav");
+            Path autoFile = FMLPaths.GAMEDIR.get().resolve("emotes" + FileSystems.getDefault().getSeparator() + ((String) emote.extraData.get("name")).replace("\"", "") + ".wav");
             if (autoFile.toFile().exists()) {
                 try {
                     short[] pairedSound = loadAudioFile(autoFile);
@@ -73,7 +71,7 @@ public class KeyframeAnimationPlayerMixin {
     }
 
     private short[] loadAudioFile(String name) throws UnsupportedAudioFileException, IOException {
-        return loadAudioFile(FabricLoader.getInstance().getGameDir().resolve("emotes" + FileSystems.getDefault().getSeparator() + name));
+        return loadAudioFile(FMLPaths.GAMEDIR.get().resolve("emotes" + FileSystems.getDefault().getSeparator() + name));
     }
 
     private short[] loadAudioFile(Path path) throws UnsupportedAudioFileException, IOException {
